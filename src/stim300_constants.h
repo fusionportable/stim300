@@ -104,7 +104,7 @@ static constexpr uint16_t sampleFreq2int(const SampleFreq& sample_freq)
   case SampleFreq::S2000:
     return 2000;
   case SampleFreq::TRG:
-    return 0;
+    return 500;
   }
 }
 

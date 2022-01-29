@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include "driver_stim300.h"
-
 DriverStim300::DriverStim300(SerialDriver& serial_driver, DatagramIdentifier datagram_id,
                              GyroOutputUnit gyro_output_unit, AccOutputUnit acc_output_unit,
                              InclOutputUnit incl_output_unit, AccRange acc_range, SampleFreq freq)
@@ -15,9 +14,9 @@ DriverStim300::DriverStim300(SerialDriver& serial_driver, DatagramIdentifier dat
 }
 
 DriverStim300::DriverStim300(SerialDriver& serial_driver)
-  : DriverStim300(serial_driver, DatagramIdentifier::RATE_ACC_INCL_TEMP_AUX, GyroOutputUnit::AVERAGE_ANGULAR_RATE,
-                  AccOutputUnit::AVERAGE_ACCELERATION, InclOutputUnit::AVERAGE_ACCELERATION, AccRange::G5,
-                  SampleFreq::S125)
+  : DriverStim300(serial_driver, DatagramIdentifier::RATE_ACC_INCL_TEMP, GyroOutputUnit::ANGULAR_RATE,
+                  AccOutputUnit::ACCELERATION, InclOutputUnit::ACCELERATION, AccRange::G5,
+                  SampleFreq::TRG)
 {
 }
 double DriverStim300::getAccX() const noexcept
@@ -97,53 +96,56 @@ Stim300Status DriverStim300::readDataStream()
       case ReadingMode::IdentifyingDatagram:
         if (byte == datagram_id_)
         {
+       //std::cout << "Matched ID!"<< std::endl;  
           // Use current datagram format
         }
-        else if (byte == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION))
-        {
-          setDatagramFormat(DatagramIdentifier::CONFIGURATION);
-        }
-        else if (byte == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION_CRLF))
-        {
-          setDatagramFormat(DatagramIdentifier::CONFIGURATION_CRLF);
-        }
+        // else if (byte == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION))
+        // {
+        //   setDatagramFormat(DatagramIdentifier::CONFIGURATION);
+        // }
+        // else if (byte == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION_CRLF))
+        // {
+        //   setDatagramFormat(DatagramIdentifier::CONFIGURATION_CRLF);
+        // }
         else
         {
           if (++n_checked_bytes > 100)
           {
-            // std::cerr << "Not able to recognise datagram" << std::endl;
-            if (read_config_from_sensor_) askForConfigDatagram();
+            std::cerr << "Not able to recognise datagram" << std::endl;
+            //if (read_config_from_sensor_) askForConfigDatagram();
             n_checked_bytes = 0;
           }
           continue;
         }
-        // if (n_checked_bytes != 0)
-        //  std::cout << "Checked bytes: " << n_checked_bytes << std::endl;
+           if (n_checked_bytes != 0)
+           std::cout << "Checked bytes: " << n_checked_bytes << std::endl;
         n_checked_bytes = 0;
         reading_mode_ = ReadingMode::ReadingDatagram;
         buffer_.push_back(byte);
         n_new_bytes_ = 1;
         continue;
+        break;
 
       case ReadingMode::ReadingDatagram:
 
         // Circular buffer
+        //datagram_size_ = 59;
         buffer_.push_back(byte);
         n_new_bytes_++;
+        //std::cout << "n_new_bytes_buffer-num: " << n_new_bytes_ << "data size: "<<int(datagram_size_) <<std::endl;
         while (buffer_.size() > datagram_size_)
           buffer_.erase(buffer_.begin());
 
         if (n_new_bytes_ < datagram_size_)
-          continue;
+        continue;
 
         // else the buffer is filled with a potential new datagram
 
-        if (sensor_config_.normal_datagram_CRLF or
-            datagram_id_ == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION_CRLF))
-        {
-          reading_mode_ = ReadingMode::VerifyingDatagramCR;
-          continue;
-        }
+        // if (sensor_config_.normal_datagram_CRLF or datagram_id_ == datagramIdentifierToRaw(DatagramIdentifier::CONFIGURATION_CRLF))
+        // {
+        //   reading_mode_ = ReadingMode::VerifyingDatagramCR;
+        //   continue;
+        // }
         break;
 
       case ReadingMode::VerifyingDatagramCR:
@@ -154,7 +156,9 @@ Stim300Status DriverStim300::readDataStream()
           continue;
         }
         reading_mode_ = ReadingMode::IdentifyingDatagram;
+        std::cout << "normal 1!"<< std::endl; 
         return Stim300Status::NORMAL;
+      break; 
 
       case ReadingMode::VerifyingDatagramLF:
 
@@ -163,7 +167,9 @@ Stim300Status DriverStim300::readDataStream()
           break;
         }
         reading_mode_ = ReadingMode::IdentifyingDatagram;
+        std::cout << "normal 2!"<< std::endl; 
         return Stim300Status::NORMAL;
+      break;
     }  // end reading mode switch
 
     if (!verifyChecksum(buffer_.cbegin(), buffer_.cend(), crc_dummy_bytes_))
@@ -173,6 +179,7 @@ Stim300Status DriverStim300::readDataStream()
       // not contain a complete datagram.
       //std::cerr << "CRC error" << std::endl;
       reading_mode_ = ReadingMode::IdentifyingDatagram;
+      std::cout << "normal 3!"<< std::endl; 
       return Stim300Status::NORMAL;
     }
 
@@ -185,6 +192,9 @@ Stim300Status DriverStim300::readDataStream()
         status = Stim300Status::CONFIG_CHANGED;
 
       sensor_config_ = sensor_config;
+
+      sensor_config_.datagram_id = DatagramIdentifier::RATE_ACC_INCL_TEMP;
+
       setDatagramFormat(sensor_config_.datagram_id);
       datagram_parser_.setDataParameters(sensor_config_);
       read_config_from_sensor_ = false;
@@ -213,6 +223,10 @@ Stim300Status DriverStim300::readDataStream()
         return Stim300Status::ERROR;
     }
   }
+
+ // std::cerr << "Stim 300 IMU no data." << std::endl;
+  serial_driver_.flush();
+  std::cout << "normal 5 !"<< std::endl; 
   return Stim300Status::NORMAL;
 }
 
@@ -231,13 +245,16 @@ Stim300Status DriverStim300::update() noexcept
       if (read_config_from_sensor_)
         askForConfigDatagram();
       mode_ = Mode::Normal;
+      break;
     case Mode::Normal:
       return readDataStream();
+      break;
     case Mode::Service:
       // std::string s(buffer_.begin(), buffer_.end());
       // std::cout << s << "\n";
       mode_ = Mode::Normal;
       return Stim300Status::NORMAL;
+      break;
   }
 }
 
