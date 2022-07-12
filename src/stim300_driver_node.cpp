@@ -18,17 +18,17 @@ int main(int argc, char** argv)
   double variance_acc{ 0 };
   int sample_rate{ 0 };
   double gravity{ 0 };
-  double DAVIS_Reset_Delay{0};
-  int DAVIS_CountClock{0};
+  // double DAVIS_Reset_Delay{0};
+  // int DAVIS_CountClock{0};
 
   node.param<std::string>("device_name", device_name, "/dev/ttyUSB0");
   node.param("variance_gyro", variance_gyro,0.0001);
   node.param("variance_acc", variance_acc, 4.0);
   node.param("sample_rate", sample_rate, 500);
   node.param("gravity", gravity, 9.80665);
-  node.param("DAVIS_Reset_Delay",DAVIS_Reset_Delay,2.0);
+  // node.param("DAVIS_Reset_Delay",DAVIS_Reset_Delay,2.0);
 
-  ros::Time DAVIS_Reset_Time = ros::Time::now();
+  // ros::Time DAVIS_Reset_Time = ros::Time::now();
   sensor_msgs::Imu stim300msg{};
   stim300msg.orientation_covariance[0] = -1;
   stim300msg.angular_velocity_covariance[0] = variance_gyro;
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
   ros::Publisher imuSensorPublisher = node.advertise<sensor_msgs::Imu>("stim300/imu/data_raw", 1000);
   
-  ros::Publisher DAVISResetPublisher = node.advertise<std_msgs::Time>("DAVIS/reset_timestamps", 1);
+  // ros::Publisher DAVISResetPublisher = node.advertise<std_msgs::Time>("DAVIS/reset_timestamps", 1);
 
   ros::Rate loop_rate(sample_rate);
 
@@ -59,16 +59,15 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
 
-      if(++DAVIS_CountClock == DAVIS_Reset_Delay / 0.005)
-      {
-      std_msgs::Time DAVIS_Reset_Msg;
-      DAVIS_Reset_Time = ros::Time::now();
-      DAVIS_Reset_Msg.data = DAVIS_Reset_Time;
-      DAVISResetPublisher.publish(DAVIS_Reset_Msg);
-      DAVIS_CountClock = 0;
-      }
+      // if(++DAVIS_CountClock == DAVIS_Reset_Delay / 0.005)
+      // {
+      // std_msgs::Time DAVIS_Reset_Msg;
+      // DAVIS_Reset_Time = ros::Time::now();
+      // DAVIS_Reset_Msg.data = DAVIS_Reset_Time;
+      // DAVISResetPublisher.publish(DAVIS_Reset_Msg);
+      // DAVIS_CountClock = 0;
+      // }
  
-
       switch (driver_stim300.update())
       {
         case Stim300Status::NORMAL:
