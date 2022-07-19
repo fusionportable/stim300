@@ -15,7 +15,7 @@ DriverStim300::DriverStim300(SerialDriver& serial_driver, DatagramIdentifier dat
 
 DriverStim300::DriverStim300(SerialDriver& serial_driver)
   : DriverStim300(serial_driver, DatagramIdentifier::RATE_ACC_INCL_TEMP, GyroOutputUnit::ANGULAR_RATE,
-                  AccOutputUnit::ACCELERATION, InclOutputUnit::ACCELERATION, AccRange::G5,
+                  AccOutputUnit::ACCELERATION, InclOutputUnit::ACCELERATION, AccRange::G10,
                   SampleFreq::TRG)
 {
 }

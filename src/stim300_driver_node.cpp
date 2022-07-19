@@ -78,9 +78,9 @@ int main(int argc, char** argv)
           break;
         case Stim300Status::NEW_MEASURMENT:
           stim300msg.header.stamp = ros::Time::now();
-          stim300msg.linear_acceleration.x = driver_stim300.getAccX() * gravity * 2;
-          stim300msg.linear_acceleration.y = driver_stim300.getAccY() * gravity * 2;
-          stim300msg.linear_acceleration.z = driver_stim300.getAccZ() * gravity * 2;
+          stim300msg.linear_acceleration.x = driver_stim300.getAccX() * gravity ;
+          stim300msg.linear_acceleration.y = driver_stim300.getAccY() * gravity ;
+          stim300msg.linear_acceleration.z = driver_stim300.getAccZ() * gravity ;
           stim300msg.angular_velocity.x = driver_stim300.getGyroX();
           stim300msg.angular_velocity.y = driver_stim300.getGyroY();
           stim300msg.angular_velocity.z = driver_stim300.getGyroZ();
