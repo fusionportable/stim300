@@ -40,7 +40,7 @@ int main(int argc, char** argv)
   stim300msg.orientation.x = 0;
   stim300msg.orientation.y = 0;
   stim300msg.orientation.z = 0;
-  stim300msg.header.frame_id = "imu_0";
+  stim300msg.header.frame_id = "body_imu";
 
   ros::Publisher imuSensorPublisher = node.advertise<sensor_msgs::Imu>("stim300/imu/data_raw", 1000);
   
