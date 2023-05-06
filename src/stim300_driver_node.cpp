@@ -77,16 +77,17 @@ int main(int argc, char** argv)
           ROS_DEBUG("Stim 300 outside operating conditions");
           break;
         case Stim300Status::NEW_MEASURMENT:
-          stim300msg.header.stamp= ros::Time::now();
-          ROS_INFO("raw: %d", stim300msg.header.stamp.nsec);
-          stim300msg.header.stamp.nsec += 100000000;
-          if(stim300msg.header.stamp.nsec >= 1000000000)
-          {
-          stim300msg.header.stamp.sec += 1;
-          stim300msg.header.stamp.nsec -= 1000000000;
-          }
+          stim300msg.header.stamp = ros::Time::now();
 
-          ROS_INFO("modify: %d", stim300msg.header.stamp.nsec);
+          // ROS_INFO("raw: %d", stim300msg.header.stamp.nsec);
+          // stim300msg.header.stamp.nsec += 100000000;
+          // if(stim300msg.header.stamp.nsec >= 1000000000)
+          // {
+          // stim300msg.header.stamp.sec += 1;
+          // stim300msg.header.stamp.nsec -= 1000000000;
+          // }
+          // ROS_INFO("modify: %d", stim300msg.header.stamp.nsec);
+
           stim300msg.linear_acceleration.x = driver_stim300.getAccX() * gravity ;
           stim300msg.linear_acceleration.y = driver_stim300.getAccY() * gravity ;
           stim300msg.linear_acceleration.z = driver_stim300.getAccZ() * gravity ;
